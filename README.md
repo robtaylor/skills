@@ -1,3 +1,5 @@
+> **Note:** This repository contains Anthropic's implementation of skills for Claude. For information about the Agent Skills standard, see [agentskills.io](http://agentskills.io).
+
 # Skills
 Skills are folders of instructions, scripts, and resources that Claude loads dynamically to improve performance on specialized tasks. Skills teach Claude how to complete specific tasks in a repeatable way, whether that's creating documents with your company's brand guidelines, analyzing data using your organization's specific workflows, or automating personal tasks.
 
@@ -84,6 +86,61 @@ The frontmatter requires only two fields:
 - `description` - A complete description of what the skill does and when to use it
 
 The markdown content below contains the instructions, examples, and guidelines that Claude will follow. For more details, see [How to create custom skills](https://support.claude.com/en/articles/12512198-creating-custom-skills).
+
+# CI for Skill Developers
+
+This repository provides a **reusable GitHub Actions workflow** that you can use to test your own skill implementations. It validates SKILL.md format, generates installable zip files, and optionally tests with the Claude API.
+
+## Quick Start
+
+Add this workflow to your skill repository:
+
+```yaml
+# .github/workflows/ci.yml
+name: CI
+on: [push, pull_request]
+
+jobs:
+  test:
+    uses: anthropics/skills/.github/workflows/skill-ci.yml@main
+    with:
+      skill_path: "."  # Path to your skill (use "." if SKILL.md is at root)
+    secrets:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}  # Optional
+```
+
+## What It Does
+
+1. **Validates SKILL.md** - Checks frontmatter format, required fields (`name`, `description`), and naming conventions
+2. **Generates Zip** - Creates a downloadable `.zip` file ready for upload to Claude
+3. **Tests with Claude API** - Uploads skill to verify it's accepted (requires `ANTHROPIC_API_KEY` secret)
+4. **Tests with Claude Code** - Integration test with Claude Code action
+
+## Configuration Options
+
+| Input | Default | Description |
+|-------|---------|-------------|
+| `skill_path` | `.` | Path to skill directory |
+| `multi_skill` | `false` | Set `true` for repos with multiple skills in subdirectories |
+| `run_api_test` | `true` | Test upload to Claude API |
+| `run_claude_code_test` | `true` | Test with Claude Code action |
+| `test_skill_name` | auto | Which skill to test (for multi-skill repos) |
+
+## Multi-Skill Repositories
+
+For repositories containing multiple skills:
+
+```yaml
+jobs:
+  test:
+    uses: anthropics/skills/.github/workflows/skill-ci.yml@main
+    with:
+      skill_path: "skills"
+      multi_skill: true
+      test_skill_name: "my-skill"
+    secrets:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+```
 
 # Partner Skills
 
